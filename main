@@ -1,0 +1,128 @@
+import json
+import requests
+import csv
+import pandas as pd
+from tenable_io.client import TenableIOClient
+
+
+def main():
+
+	client = TenableIOClient()
+	name_data = client.get('users')
+	name_json = name_data.json()
+	
+	print " "
+	print "Hello ", name_json['users'][0]['username']
+	print "The purpose of this program is to make"
+	print "csv files with your tenable.io data."
+	print "You can also launch a scan through tenable."
+	print "assets"
+	print "scans"
+	print "users"
+	print "launch scan"
+	print "scanners csv"
+	print " "
+	
+	entry = raw_input("Please type what you want to explore: ")
+	assets_search = entry.lower() in ('assets')
+	scans_search = entry.lower() in ('scans')
+	users_search = entry.lower() in ('users')
+	scan_time = entry.lower() in ('launch scan', 'launch')
+	scanners_csv = entry.lower() in ('scanners csv', 'scanners')
+	
+	if assets_search:
+		data = client.get('assets')
+		data_json = data.json()
+		assetsdata(data_json)
+	elif scans_search:
+		data = client.get('scans')
+		data_json = data.json()
+		scansdata(data_json)
+	elif users_search:
+		data = client.get('users')
+		data_json = data.json()
+		usersdata(data_json)
+	elif scan_time:
+		launchscan(client)
+	elif scanners_csv:
+		writecsv(client)
+	else:
+		print "invalid input"
+		main()
+
+'''
+	Let's define our functions
+'''		
+
+def assetsdata(data_json):
+	print "\nnumber of assets\nasset info\ntesting\n"
+		
+	asset_entry = str(raw_input("What do you want to learn more about? "))
+	
+	get_num = asset_entry.lower() in ('number','number of assets')
+	get_info = asset_entry.lower() in ('asset info','info')
+	
+	if get_num:
+		print "number of assets: ", data_json['total']
+		print "\nDo you want this data written to a csv?\nYes\nNo\n"
+		csv_entry = raw_input()
+		
+		csv_yes = csv_entry.lower() in ('yes','y')
+		csv_no = csv_entry.lower() in ('no','n')
+		
+		if csv_yes:
+			print "Ok we will write it to assets.csv"
+			filename = "num_assets"
+			writecsv(data_json)
+		if csv_no:
+			main()
+	elif get_info:
+		print "asset info: ", data_json['assets']
+
+def scansdata(data_json):
+
+	print data_json['folders']
+	print "\nDo you want this data written to a csv?\nYes\nNo\n"
+	csv_entry = raw_input()
+	
+	csv_yes = csv_entry.lower() in ('yes','y')
+	csv_no = csv_entry.lower() in ('no','n')
+	
+	if csv_yes:
+		print "Ok we will write it to scans.csv"
+		filename = "scans"
+		writecsv(data_json)
+	if csv_no:
+		main()
+
+'''
+	Prints the username field of the users json data.	
+'''
+
+def usersdata(data_json):
+	print data_json['users'][0]['username']
+
+'''
+	Writes scanners names & ID's to a CSV
+'''
+
+def writecsv(client):
+	assetinfo = client.workbenches_api.assets(id)
+	print str(assetinfo).strip('[]')
+
+'''
+	Here we use the client keys to launch a scan through tenable. 
+	We can not yet edit the name or target.	
+'''
+
+def launchscan(client):
+	scan_entry = raw_input("Just as a demonstration, you can launch a scan of Google Firing Range through Tenable. Are you sure you want to do this?")
+	noscan = scan_entry.lower() in ('no','n')
+	yesscan = scan_entry.lower() in ('yes','y')
+	if noscan:
+		print "No worries. Returning you to main menu."
+		main()
+	elif yesscan:
+		print "Ok, this may take a few minutes: "
+		
+main()
